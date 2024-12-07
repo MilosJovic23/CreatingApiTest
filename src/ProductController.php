@@ -24,6 +24,8 @@
         }
         private function processResourceRequest( string $method, string $id ):void {
 
+            $product = $this->gateway->get($id);
+            echo json_encode($product);
         }
         private function processCollectionRequest( string $method ):void {
 
@@ -34,7 +36,16 @@
                 case 'POST':
 
                     $data = (array) json_decode(file_get_contents('php://input'),true);
+                    $errors = $this->getValidationErrors($data);
+
+                    if ( !empty ($errors)) {
+                        http_response_code(422);
+                        echo json_encode(["errors" => $errors]);
+                        break;
+                    }
+
                     $id = $this->gateway->create($data);
+
                     http_response_code(201);
 
                     echo json_encode([
@@ -43,6 +54,24 @@
                     ]);
 
                     break;
+                default:
+                    http_response_code(405);
+                    header('Allow: GET,POST');
             }
+
+        }
+        public function getValidationErrors ( array $data ):array {
+
+            $errors = [];
+
+            if ( empty($data['name']) ) {
+                $errors[] = "Name is required";
+            }
+            if ( array_key_exists('size', $data) ) {
+                if ( filter_var($data['size'], FILTER_VALIDATE_INT) === false ) {
+                    $errors[] = "Size must be an integer";
+                }
+            }
+            return $errors;
         }
     }
