@@ -21,13 +21,11 @@
 
     $controller = new ProductController($gateway);
 
-
     if (  $parts[2] !== "products") {
         http_response_code(404);
         exit;
     }
     $id = $parts[3] ?? null;
-
 
     $controller->processRequest($_SERVER["REQUEST_METHOD"], $id);
 
